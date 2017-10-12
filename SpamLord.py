@@ -21,9 +21,12 @@ For optional Part 3, you may need to add other lists of patterns.
 #   the second parenthesis should be around the somewhere part
 #   in an email address whose standard form is someone@somewhere.edu
 epatterns = []
-epatterns.append('([A-Za-z.]+)@([A-Za-z.]+)\.edu')
-epatterns.append('([A-Za-z.]+)\s@\s([A-Za-z.]+)\.edu')
-
+epatterns.append('([A-Za-z.\-]+)\s*@\s*([A-Za-z.\-]+)\.[\-Ee]+[\-Dd]+[Uu]+')
+epatterns.append('([A-Za-z.]+)\s+[Aa][Tt]\s+([A-Za-z.]+\s*[Dd]?[Oo]?[Tt.;]?\s?[A-Za-z]+\s*)[Dd]?[Oo]?[Tt.;]?\s?edu')
+epatterns.append('([A-Za-z.]+)\<del\>@([A-Za-z.]+)\.edu')
+epatterns.append('([A-Za-z.]+)\&\#x40\;([A-Za-z.]+)\.edu')
+epatterns.append('([A-Za-z.]+)\s*\<at symbol\>\s*([A-Za-z.]+)\.edu')
+epatterns.append('([A-Za-z.]+)\s\(followed by [&ldquo;"]+@([A-Za-z.]+)\.edu')
 
 
 # phone patterns
@@ -33,10 +36,9 @@ epatterns.append('([A-Za-z.]+)\s@\s([A-Za-z.]+)\.edu')
 #   the third parenthesis should be around the number part ZZZZ
 #   in a phone number whose standard form is XXX-YYY-ZZZZ
 ppatterns = []
-#ppatterns.append('(\d{3})-(\d{3})-(\d{4})')
+ppatterns.append('(\[*\(*[2-9]\d{2})\s*\]*\)*\s*-*\s*(\d{3})\s*-*\s*(\d{4})')
 
-
-""" 
+"""
 This function takes in a filename along with the file object and
 scans its contents against regex patterns. It returns a list of
 (filename, type, value) tuples where type is either an 'e' or a 'p'
@@ -62,16 +64,32 @@ def process_file(name, f):
             matches = re.findall(epat,line)
             for m in matches:
                 # string formatting operator % takes elements of list m
-                #   and inserts them in place of each %s in the result string 
-                email = '%s@%s.edu' % m
-                res.append((name,'e',email))
+                #   and inserts them in place of each %s in the result string
+                if " " in m[1]:
+                    m = m[0], m[1].lower().replace("dot ","")
+                    m =m[0], m[1].strip().replace(" ",".")
+                if("Server" not in m ):
+                    email = '%s@%s.edu' % m
+                    email = email.lower()
+                    email = email.replace("-","")
+                    email = email.replace(";",".")
+                    email = email.replace(' ', "")
+                    email = email.replace("dot","")
+                    res.append((name,'e',email))
 
         for ppat in ppatterns:
             # each ppat has 3 sets of parentheses so each match will have 3 items in a list
             matches = re.findall(ppat,line)
+
             for m in matches:
                 phone = '%s-%s-%s' % m
+                phone = phone.replace('(', "")
+                phone = phone.replace('[', "")
+                phone = phone.replace(']', "")
+                phone = phone.replace(')', "")
+                phone = phone.replace(' ', "")
                 res.append((name,'p',phone))
+
     return res
 
 """
